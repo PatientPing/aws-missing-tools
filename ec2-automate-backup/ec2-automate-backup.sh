@@ -117,6 +117,9 @@ purge_EBS_Snapshots() {
   snapshot_purge_allowed=$(aws ec2 describe-snapshots --region $region --filters Name=tag:PurgeAllow,Values=true --output text --query 'Snapshots[*].SnapshotId')
   
   for snapshot_id_evaluated in $snapshot_purge_allowed; do
+    # Get the details of what will be purged and print it out in JSON format for Greylog
+    echo "Printing out the current snapshot list of snapshots with PurgeAllow and PurgeAfterFE"
+    aws ec2 describe-snapshots --region $region --snapshot-ids ${snapshot_purge_allowed} --output json
     #gets the "PurgeAfterFE" date which is in UTC with UNIX Time format (or xxxxxxxxxx / %s)
     purge_after_fe=$(aws ec2 describe-snapshots --region $region --snapshot-ids $snapshot_id_evaluated --output text | grep ^TAGS.*PurgeAfterFE | cut -f 3)
     #if purge_after_date is not set then we have a problem. Need to alert user.
@@ -214,6 +217,7 @@ for ebs_selected in $ebs_backup_list; do
   create_EBS_Snapshot_Tags
 done
 
+#if purge_snapshots is true, then run purge_EBS_Snapshots function
 #if purge_snapshots is true, then run purge_EBS_Snapshots function
 if $purge_snapshots; then
   echo "Snapshot Purging is Starting Now."
