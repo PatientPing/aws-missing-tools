@@ -46,6 +46,8 @@ get_EBS_List() {
   esac
   #creates a list of all ebs volumes that match the selection string from above
   ebs_backup_list=$(aws ec2 describe-volumes --region $region $ebs_selection_string --output text --query 'Volumes[*].VolumeId')
+  #Print the list of ebs volumes that match the selection string from above
+  aws ec2 describe-volumes --region $region $ebs_selection_string --output json --query 'Volumes[*]'
   #takes the output of the previous command 
   ebs_backup_list_result=$(echo $?)
   if [[ $ebs_backup_list_result -gt 0 ]]; then
@@ -116,7 +118,7 @@ purge_EBS_Snapshots() {
   # that contain a tag with the key value/pair PurgeAllow=true
   snapshot_purge_allowed=$(aws ec2 describe-snapshots --region $region --filters Name=tag:PurgeAllow,Values=true --output text --query 'Snapshots[*].SnapshotId')
   # Get the details of what will be purged and print it out in JSON format for Greylog
-  echo "Printing out the current snapshot list of snapshots with PurgeAllow and PurgeAfterFE"
+  echo "Printing out the current snapshot list of snapshots before purge with current PurgeAllow and PurgeAfterFE settings"
   aws ec2 describe-snapshots --region $region --snapshot-ids ${snapshot_purge_allowed} --output json
 
   for snapshot_id_evaluated in $snapshot_purge_allowed; do
@@ -211,6 +213,10 @@ get_EBS_List
 for ebs_selected in $ebs_backup_list; do
   ec2_snapshot_description="ec2ab_${ebs_selected}_$current_date"
   ec2_snapshot_resource_id=$(aws ec2 create-snapshot --region $region --description $ec2_snapshot_description --volume-id $ebs_selected --output text --query SnapshotId 2>&1)
+  # print out the current snapshot information after creation and tagging
+  ec2_current_snapshot_info=$(aws ec2 describe-snapshots --snapshot-ids $ec2_snapshot_resource_id --output json 2>&1)
+  echo "Printing out the current information of the snapshot just created "
+  aws ec2 describe-snapshots --snapshot-ids $ec2_snapshot_resource_id --output json
   if [[ $? != 0 ]]; then
     echo -e "An error occurred when running ec2-create-snapshot. The error returned is below:\n$ec2_create_snapshot_result" 1>&2 ; exit 70
   fi  
