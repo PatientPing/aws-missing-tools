@@ -47,6 +47,7 @@ get_EBS_List() {
   #creates a list of all ebs volumes that match the selection string from above
   ebs_backup_list=$(aws ec2 describe-volumes --region $region $ebs_selection_string --output text --query 'Volumes[*].VolumeId')
   #Print the list of ebs volumes that match the selection string from above
+  echo "Printing the list of ebs volumes that match the tag criteria from ${ebs_selection_string}"
   aws ec2 describe-volumes --region $region $ebs_selection_string --output json --query 'Volumes[*]'
   #takes the output of the previous command 
   ebs_backup_list_result=$(echo $?)
