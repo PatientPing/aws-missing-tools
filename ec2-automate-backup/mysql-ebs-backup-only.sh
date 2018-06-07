@@ -75,6 +75,8 @@ else
 fi
 done
 
+cat mysql_ebs_vols.txt
+
 mysql_ebs_vols=`cat mysql_ebs_vols.txt`
 echo "-- The MySQL volume list to snapshot is : ${mysql_ebs_vols} -------------------------------------------------------"
 
