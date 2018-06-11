@@ -60,18 +60,18 @@ aws ec2 describe-instances --output text --filters 'Name=tag:Name,Values=*mysql*
 cat mysql_instance_list_dns.txt
 
 echo "-- Obtaining the entire EBS volume list that has tags Backup-Daily = true -----------------------------------------"
-aws ec2 describe-volumes --region us-east-1 --filters Name=tag:Backup-Daily,Values=true  --query 'Volumes[*].Attachments[*].[InstanceId,VolumeId]' > all_instances_vols.txt
+aws ec2 describe-volumes --output text --region us-east-1 --filters Name=tag:Backup-Daily,Values=true  --query 'Volumes[*].Attachments[*].[InstanceId,VolumeId]' > all_instances_vols.txt
 
 cat all_instances_vols.txt
 
 for instance in `cat  mysql_instance_list_dns.txt | awk '{print $1}'`;
 do
 if grep -q ${instance} all_instances_vols.txt ; then
-    echo "-- Volume found for mysql instance ${instance}  ---------------------------------------------------------------"
+    echo "-- Volume found for MySQL DB instance ${instance}  ---------------------------------------------------------------"
     grep $instance all_instances_vols.txt | awk '{print $2}' >> mysql_ebs_vols.txt
 else
-    echo "-- This MySQL ${instance} does not have any snapshots being taken - Is this desired state? --------------------"
-    echo " $? is the Shell return code for instance not found to have Backup-Daily = true tags on any volumes "
+    echo "-- This MySQL DB ${instance} does not have any snapshots being taken - Is this desired state? --------------------"
+    echo " $? is the Shell return code for ${instance} not found to have Backup-Daily = true tags on any volumes "
 fi
 done
 
